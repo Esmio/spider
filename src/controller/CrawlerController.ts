@@ -1,9 +1,8 @@
-import 'reflect-metadata';
 import { Request, Response, NextFunction } from 'express';
 import fs from 'fs';
 import path from 'path';
 
-import { controller, get, post, use } from './decorator';
+import { controller, use, get } from '../decorator';
 import Crawler from '../utils/crawler';
 import Analyzer from '../utils/analyzer';
 import { getResponseData } from '../utils/util';
@@ -12,8 +11,13 @@ interface BodyRequest extends Request {
   body: { [key: string]: string | undefined };
 }
 
-const checkLogin = (req: BodyRequest, res: Response, next: NextFunction) => {
-  const isLogin = req.session ? req.session.login : false;
+const checkLogin = (
+  req: BodyRequest,
+  res: Response,
+  next: NextFunction
+): void => {
+  const isLogin = !!(req.session ? req.session.login : false);
+  console.log('checkLogin middleware');
   if (isLogin) {
     next();
   } else {
@@ -21,11 +25,17 @@ const checkLogin = (req: BodyRequest, res: Response, next: NextFunction) => {
   }
 };
 
-@controller
-class CrawlerController {
+const test = (req: BodyRequest, res: Response, next: NextFunction): void => {
+  console.log('test middleware');
+  next();
+};
+
+@controller('/')
+export class CrawlerController {
   @get('/getData')
   @use(checkLogin)
-  getData(req: BodyRequest, res: Response) {
+  @use(test)
+  getData(req: BodyRequest, res: Response): void {
     const secret = 'x3b174jsx';
     const url = `http://www.dell-lee.com/typescript/demo.html?secret=${secret}`;
     const analyzer = Analyzer.getInstance();
@@ -35,7 +45,7 @@ class CrawlerController {
 
   @get('/showData')
   @use(checkLogin)
-  showData(req: BodyRequest, res: Response) {
+  showData(req: BodyRequest, res: Response): void {
     try {
       const position = path.resolve(__dirname, '../../data/course.json');
       const result = fs.readFileSync(position, 'utf-8');
