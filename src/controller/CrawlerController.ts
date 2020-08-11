@@ -11,15 +11,6 @@ interface BodyRequest extends Request {
   body: { [key: string]: string | undefined };
 }
 
-interface CourseItem {
-  title: string;
-  count: number;
-}
-
-interface DataStructure {
-  [key: string]: CourseItem[];
-}
-
 const checkLogin = (
   req: BodyRequest,
   res: Response,
@@ -47,7 +38,7 @@ export class CrawlerController {
     const url = `http://www.dell-lee.com/typescript/demo.html?secret=${secret}`;
     const analyzer = Analyzer.getInstance();
     new Crawler(url, analyzer);
-    res.json(getResponseData<boolean>(true));
+    res.json(getResponseData<responseResult.getData>(true));
   }
 
   @get('/showData')
@@ -56,9 +47,11 @@ export class CrawlerController {
     try {
       const position = path.resolve(__dirname, '../../data/course.json');
       const result = fs.readFileSync(position, 'utf-8');
-      res.json(getResponseData<DataStructure>(JSON.parse(result)));
+      res.json(getResponseData<responseResult.showData>(JSON.parse(result)));
     } catch (e) {
-      res.json(getResponseData<boolean>(false, '尚未爬取到内容'));
+      res.json(
+        getResponseData<responseResult.showData>(false, '尚未爬取到内容')
+      );
     }
   }
 }
